@@ -1,0 +1,56 @@
+Negru Mihai-Vlad 332CB
+
+Tema 4 Planificator de threaduri
+Organizare
+    Am urmarit in realizarea temei crearea unui planificator de threaduri care
+va controla execuția acestora în user-space. In primul rand am gandit cum trebuie 
+sa gestionez thread-urile si dupa cum este sugerat si in cerinta am creat o structura
+Sch schedule in care salvam datele referitoare la statdiun in care se afla acele thred-uri,
+running, ready, blocked.
+    
+    Thr Running; //salvand o structura de tip thread a celui care ruleaza.
+	TL waiting; //o lista cu thread-urile ce sunt in waiting si asteapta un semnal (io)
+	TL all_thread; //lista cu toate thread-urile pentru la final sa pot da 
+join pe ele si sa dezaloc memoria
+	AQ Ready; //coada de prioritati in care salvam thread-urile ce asteapta sa fie rulate
+	so_compare *compare_io; //functia de comparare pentru extragerea 
+thread-urilor din lisat de waiting
+	so_compare *compare_priority; //functia de comparare pentru a adauga thread-uri in coada
+de ready
+	unsigned int no_io; //numarul de imputuri
+	unsigned int quant; //cuanat de timp
+    
+    Dupa cum am spus si mai sus am facut si o structura pentru thread-uri in care avem:
+	
+    tid_t id; //thread id-ul procesului pentru a stii pe ce dam join
+	so_handler *func; // functia ce va fi executata de thread
+	unsigned int priority; //prioritatea
+	unsigned int quant;
+	unsigned int wait_io;
+	sem_t wait; // semaforul pentru a fi blocat in momentul in care thread-ului in expira
+cuanta de timp sau este blocat asteptant un io sau dat afara de un thread cu prioritate 
+mai mare si pus in coada de ready.
+
+    In principiu toate functiile verifica la inceput erorile ce pot aparea la apel, apoi 
+facand urmatoarele:
+int so_init(cuantă, io) -  aloca structura de tip schedule si returneaza 0 daca e ok
+-1 in caz de eroare 
+void so_end() - dezaloca memoria si asteapta thread-urile sa se termine
+void so_exec() - simuleaza o actiune doar crescand cuanta de timp a thread-ului, in cazul in care
+a expirat este schimbat cu cel cu prioritatea cea mai amre de ep coada
+int so_wait(event/io) - pune thread-ul curent , cel din running pe lista de blocked si deblocheaza
+primul thread din coada de prioritati
+int so_signal(event/io) - ia toate threadurile din blocked care asteapta evenimentul io
+si le baga in coada ready, daca unul din acele thread-uri are prioritate mai mare o sa devina
+acela running si cel curent este blocat si pus in coada de prioritati
+tid_t so_fork(handler, prioritate) - creaza un nou thread, in aczul in acre este primul este trecut
+ca running in caz contrar daca are prioritatea cea mai mare va fii blocat thread-ul curent
+si lasat sa ruleze cel nou altfel isi continua executia cel de pe acre s-a facut fork.
+
+Bibliografie
+    Laborator 08
+Implementare
+    Este implementată toată tema
+Compilare 
+    make
+
